@@ -10,6 +10,8 @@ import psycopg2  # Required for PostgreSQL on Render
 from dotenv import load_dotenv  # For local environment variables
 import gunicorn  # For production WSGI server (required in requirements.txt)
 
+
+
 app = Flask(__name__,template_folder='templates')
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'fallback-secret')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///app.db')
