@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Team Progress{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Team Progress Overview</h2>
+    
+    <!-- Overall Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h5 class="card-title">Total Tasks</h5>
+                    <p class="display-4">{{ overall_stats.total_tasks }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title">Completed</h5>
+                    <p class="display-4">{{ overall_stats.completed_tasks }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <h5 class="card-title">Total Hours</h5>
+                    <p class="display-4">{{ "%.1f"|format(overall_stats.total_hours) }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body">
+                    <h5 class="card-title">Avg Progress</h5>
+                    <p class="display-4">{{ "%.0f"|format(overall_stats.avg_progress) }}%</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Detailed Member Stats -->
+    <div class="card">
+        <div class="card-header">
+            <h4>Member Statistics</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Member</th>
+                            <th>Total Tasks</th>
+                            <th>Completed</th>
+                            <th>Completion Rate</th>
+                            <th>Total Hours</th>
+                            <th>Avg Progress</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stat in user_stats %}
+                        <tr>
+                            <td>{{ stat.user.username }}</td>
+                            <td>{{ stat.total_tasks }}</td>
+                            <td>{{ stat.completed_tasks }}</td>
+                            <td>
+                                {% if stat.total_tasks > 0 %}
+                                {{ "%.0f"|format((stat.completed_tasks / stat.total_tasks) * 100) }}%
+                                {% else %}
+                                0%
+                                {% endif %}
+                            </td>
+                            <td>{{ "%.1f"|format(stat.total_hours) }}</td>
+                            <td>
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar" role="progressbar" style="width: {{ stat.avg_progress }}%">
+                                        {{ "%.0f"|format(stat.avg_progress) }}%
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <a href="#" class="btn btn-sm btn-info">Details</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

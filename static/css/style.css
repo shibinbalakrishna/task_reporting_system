@@ -1,0 +1,46 @@
+body {
+    background-color: #f8f9fa;
+    padding-top: 20px;
+}
+
+.card {
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    border-radius: 10px 10px 0 0 !important;
+}
+
+.progress {
+    height: 25px;
+}
+
+.progress-bar {
+    font-weight: bold;
+}
+
+.table th {
+    background-color: #f8f9fa;
+}
+
+.navbar {
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.form-range::-webkit-slider-thumb {
+    background: #0d6efd;
+}
+
+.form-range::-moz-range-thumb {
+    background: #0d6efd;
+}
+
+.form-range::-ms-thumb {
+    background: #0d6efd;
+}
+
+
+
+

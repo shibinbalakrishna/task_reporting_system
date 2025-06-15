@@ -1,0 +1,346 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h2>Welcome, {{ user.username }}!</h2>
+<p class="text-muted">Today is {{ date.strftime('%A, %B %d, %Y') }}</p>
+
+<div class="row mt-4">
+    <!-- Left Column -->
+    <div class="col-md-4">
+        <!-- Weekly Stats Card -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5>Weekly Stats</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6>Total Hours</h6>
+                    <p class="fs-4">{{ "%.1f"|format(total_hours) }}</p>
+                </div>
+                <div class="mb-3">
+                    <h6>Average Progress</h6>
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" style="width: {{ avg_progress }}%">
+                            {{ "%.0f"|format(avg_progress) }}%
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h6>Completed Tasks</h6>
+                    <p class="fs-4">{{ completed_tasks }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions Card -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <a href="{{ url_for('report') }}" class="btn btn-success mb-2">
+                    <i class="fas fa-plus"></i> Report Task
+                </a>
+                <a href="{{ url_for('progress') }}" class="btn btn-info mb-2">
+                    <i class="fas fa-chart-line"></i> My Progress
+                </a>
+                {% if user.is_admin %}
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-warning mb-2">
+                    <i class="fas fa-cog"></i> Admin Panel
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Right Column - Tasks Section -->
+    <div class="col-md-8">
+        <!-- Tabbed Tasks Interface -->
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <ul class="nav nav-tabs card-header-tabs">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#recent-tasks" style="color: black;">
+                            <i class="fas fa-history"></i> Recent Tasks
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#team-tasks" style="color: black;">
+                            <i class="fas fa-users"></i> Team Tasks
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content">
+                    <!-- Recent Tasks Tab -->
+                    <div class="tab-pane fade show active" id="recent-tasks">
+                        {% if user_tasks %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Description</th>
+                                        <th>Hours</th>
+                                        <th>Progress</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for task in user_tasks %}
+                                    <tr>
+                                        <td>{{ task.date.strftime('%b %d') }}</td>
+                                        <td>
+                                            <a href="#" data-bs-toggle="modal" data-bs-target="#taskModal{{ task.id }}">
+                                                {{ task.description|truncate(40) }}
+                                            </a>
+                                            <!-- Task Detail Modal -->
+                                            <div class="modal fade" id="taskModal{{ task.id }}" tabindex="-1">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Task Details</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <p><strong>Date:</strong> {{ task.date.strftime('%A, %B %d, %Y') }}</p>
+                                                            <p><strong>Description:</strong> {{ task.description }}</p>
+                                                            <p><strong>Hours:</strong> {{ task.hours }}</p>
+                                                            <p><strong>Progress:</strong> 
+                                                                <div class="progress">
+                                                                    <div class="progress-bar" role="progressbar" style="width: {{ task.progress }}%">
+                                                                        {{ task.progress }}%
+                                                                    </div>
+                                                                </div>
+                                                            </p>
+                                                            <p><strong>Status:</strong> 
+                                                                <span class="badge bg-{{ 'success' if task.status == 'Completed' else 'warning' }}">
+                                                                    {{ task.status }}
+                                                                </span>
+                                                            </p>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                            <a href="{{ url_for('edit_task', task_id=task.id) }}" class="btn btn-primary">Edit</a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ "%.1f"|format(task.hours) }}</td>
+                                        <td>
+                                            <div class="progress" style="height: 20px;">
+                                                <div class="progress-bar" role="progressbar" style="width: {{ task.progress }}%">
+                                                    {{ task.progress }}%
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ 'success' if task.status == 'Completed' else 'warning' }}">
+                                                {{ task.status }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="#" data-bs-toggle="modal" data-bs-target="#taskModal{{ task.id }}" class="btn btn-sm btn-info">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('edit_task', task_id=task.id) }}" class="btn btn-sm btn-warning">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> No tasks reported yet. 
+                            <a href="{{ url_for('report') }}">Report your first task</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Team Tasks Tab -->
+                    <div class="tab-pane fade" id="team-tasks">
+                        {% if all_tasks %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Date</th>
+                                        <th>Description</th>
+                                        <th>Hours</th>
+                                        <th>Progress</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for task in all_tasks %}
+                                    <tr>
+                                        <td>
+                                            {% if task.user.id == user.id %}
+                                            <strong>{{ task.user.username }} (You)</strong>
+                                            {% else %}
+                                            {{ task.user.username }}
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ task.date.strftime('%b %d') }}</td>
+                                        <td>
+                                            <a href="#" data-bs-toggle="modal" data-bs-target="#teamTaskModal{{ task.id }}">
+                                                {{ task.description|truncate(40) }}
+                                            </a>
+                                            <!-- Team Task Detail Modal -->
+                                            <div class="modal fade" id="teamTaskModal{{ task.id }}" tabindex="-1">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Task Details</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <p><strong>User:</strong> {{ task.user.username }}</p>
+                                                            <p><strong>Date:</strong> {{ task.date.strftime('%A, %B %d, %Y') }}</p>
+                                                            <p><strong>Description:</strong> {{ task.description }}</p>
+                                                            <p><strong>Hours:</strong> {{ task.hours }}</p>
+                                                            <p><strong>Progress:</strong> 
+                                                                <div class="progress">
+                                                                    <div class="progress-bar" role="progressbar" style="width: {{ task.progress }}%">
+                                                                        {{ task.progress }}%
+                                                                    </div>
+                                                                </div>
+                                                            </p>
+                                                            <p><strong>Status:</strong> 
+                                                                <span class="badge bg-{{ 'success' if task.status == 'Completed' else 'warning' }}">
+                                                                    {{ task.status }}
+                                                                </span>
+                                                            </p>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                            {% if task.user_id == user.id or user.is_admin %}
+                                                            <a href="{{ url_for('edit_task', task_id=task.id) }}" class="btn btn-primary">Edit</a>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ "%.1f"|format(task.hours) }}</td>
+                                        <td>
+                                            <div class="progress" style="height: 20px;">
+                                                <div class="progress-bar" role="progressbar" style="width: {{ task.progress }}%">
+                                                    {{ task.progress }}%
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ 'success' if task.status == 'Completed' else 'warning' }}">
+                                                {{ task.status }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> No team tasks found.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Team Performance Section -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5>Team Performance</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Member</th>
+                                <th>Total Tasks</th>
+                                <th>Completed</th>
+                                <th>Completion Rate</th>
+                                <th>Total Hours</th>
+                                <th>Avg Progress</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in user_stats %}
+                            <tr>
+                                <td>
+                                    {% if stat.user.id == user.id %}
+                                    <strong>{{ stat.user.username }} (You)</strong>
+                                    {% else %}
+                                    {{ stat.user.username }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ stat.total_tasks }}</td>
+                                <td>{{ stat.completed_tasks }}</td>
+                                <td>
+                                    {% if stat.total_tasks > 0 %}
+                                    {{ "%.0f"|format((stat.completed_tasks / stat.total_tasks) * 100) }}%
+                                    {% else %}
+                                    0%
+                                    {% endif %}
+                                </td>
+                                <td>{{ "%.1f"|format(stat.total_hours) }}</td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar bg-{{ 'success' if stat.avg_progress >= 75 else 'warning' if stat.avg_progress >= 50 else 'danger' }}" 
+                                             role="progressbar" 
+                                             style="width: {{ stat.avg_progress }}%">
+                                            {{ "%.0f"|format(stat.avg_progress) }}%
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tab functionality
+    var tabElms = document.querySelectorAll('a[data-bs-toggle="tab"]')
+    tabElms.forEach(function(tabEl) {
+        tabEl.addEventListener('shown.bs.tab', function (event) {
+            // Refresh any charts or other components when tab is shown
+        })
+    })
+    
+    // Animate progress bars
+    const progressBars = document.querySelectorAll('.progress-bar');
+    progressBars.forEach(bar => {
+        const width = bar.style.width || bar.getAttribute('aria-valuenow');
+        if (width) {
+            bar.style.width = '0';
+            setTimeout(() => {
+                bar.style.width = width.includes('%') ? width : width + '%';
+            }, 100);
+        }
+    });
+});
+</script>
+{% endblock %}

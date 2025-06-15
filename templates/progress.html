@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}My Progress{% endblock %}
+
+{% block content %}
+<h2>My Task Progress</h2>
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-success mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Weekly Hours</h5>
+                <p class="card-text display-4">{{ "%.1f"|format(total_hours) }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-info mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Average Progress</h5>
+                <p class="card-text display-4">{{ "%.0f"|format(avg_progress) }}%</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-primary mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Total Tasks</h5>
+                <p class="card-text display-4">{{ tasks|length }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h4>Task History</h4>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Hours</th>
+                        <th>Progress</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in tasks %}
+                    <tr>
+                        <td>{{ task.date.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#taskModal{{ task.id }}">
+                                {{ task.description[:50] }}{% if task.description|length > 50 %}...{% endif %}
+                            </a>
+                            <!-- Task Detail Modal -->
+                            <div class="modal fade" id="taskModal{{ task.id }}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Task Details</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p><strong>Date:</strong> {{ task.date.strftime('%A, %B %d, %Y') }}</p>
+                                            <p><strong>Description:</strong> {{ task.description }}</p>
+                                            <p><strong>Hours:</strong> {{ task.hours }}</p>
+                                            <p><strong>Progress:</strong> 
+                                                <div class="progress">
+                                                    <div class="progress-bar bg-{{ 'success' if task.progress == 100 else 'info' }}" 
+                                                         role="progressbar" 
+                                                         style="width: {{ task.progress }}%">
+                                                        {{ task.progress }}%
+                                                    </div>
+                                                </div>
+                                            </p>
+                                            <p><strong>Status:</strong> 
+                                                <span class="badge bg-{{ 'success' if task.status == 'Completed' else 'warning' }}">
+                                                    {{ task.status }}
+                                                </span>
+                                            </p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            <a href="{{ url_for('edit_task', task_id=task.id) }}" class="btn btn-primary">Edit</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ task.hours }}</td>
+                        <td>
+                            <div class="progress">
+                                <div class="progress-bar bg-{{ 'success' if task.progress == 100 else 'info' }}" 
+                                     role="progressbar" 
+                                     style="width: {{ task.progress }}%" 
+                                     aria-valuenow="{{ task.progress }}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                    {{ task.progress }}%
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if task.status == 'Completed' else 'warning' }}">
+                                {{ task.status }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('edit_task', task_id=task.id) }}" class="btn btn-sm btn-warning">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

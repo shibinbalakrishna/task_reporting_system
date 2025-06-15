@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Task{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4>Edit Task</h4>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('edit_task', task_id=task.id) }}">
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea class="form-control" id="description" name="description" rows="3" required>{{ task.description }}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="hours" class="form-label">Hours</label>
+                    <input type="number" step="0.1" class="form-control" id="hours" name="hours" value="{{ task.hours }}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="progress" class="form-label">Progress (%)</label>
+                    <input type="range" class="form-range" id="progress" name="progress" min="0" max="100" value="{{ task.progress }}"
+                           oninput="updateProgressValue(this.value)">
+                    <div class="d-flex justify-content-between">
+                        <span>0%</span>
+                        <span id="progressValue">{{ task.progress }}%</span>
+                        <span>100%</span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" name="status">
+                        <option value="Pending" {% if task.status == 'Pending' %}selected{% endif %}>Pending</option>
+                        <option value="In Progress" {% if task.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                        <option value="Completed" {% if task.status == 'Completed' %}selected{% endif %}>Completed</option>
+                    </select>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <button type="submit" class="btn btn-primary">Update Task</button>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateProgressValue(value) {
+    document.getElementById('progressValue').textContent = value + '%';
+}
+</script>
+{% endblock %}

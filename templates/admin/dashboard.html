@@ -1,0 +1,404 @@
+{% extends "./base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4">Admin Dashboard</h2>
+
+    <!-- Stats Cards Row -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Users</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_users }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Total Tasks</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_tasks }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-tasks fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Completed Tasks</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ completed_tasks }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Completion Rate</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {% if total_tasks > 0 %}
+                                {{ ((completed_tasks / total_tasks) * 100)|round(1) }}%
+                                {% else %}
+                                0%
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-percent fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Tasks Status Distribution</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie pt-4 pb-2">
+                        <canvas id="taskStatusChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-center small">
+                        <span class="mr-2">
+                            <i class="fas fa-circle text-success"></i> Completed
+                        </span>
+                        <span class="mr-2">
+                            <i class="fas fa-circle text-warning"></i> In Progress
+                        </span>
+                        <span class="mr-2">
+                            <i class="fas fa-circle text-danger"></i> Pending
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Weekly Activity</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="weeklyActivityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Tasks and Users Tables -->
+    <div class="row">
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Tasks</h6>
+                    <div>
+                        <a href="{{ url_for('admin_progress') }}" class="btn btn-sm btn-primary mr-2">
+                            <i class="fas fa-list"></i> View All
+                        </a>
+                        <a href="{{ url_for('export_data') }}" class="btn btn-sm btn-success" 
+                           data-toggle="tooltip" title="Download all progress data as CSV">
+                            <i class="fas fa-download"></i> Export Data
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>User</th>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Hours</th>
+                                    <th>Progress</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for task in tasks %}
+                                <tr>
+                                    <td>{{ task.user.username }}</td>
+                                    <td>{{ task.date.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        <a href="#" data-toggle="modal" data-target="#taskModal{{ task.id }}">
+                                            {{ task.description[:50] }}{% if task.description|length > 50 %}...{% endif %}
+                                        </a>
+                                        <!-- Task Detail Modal -->
+                                        <div class="modal fade" id="taskModal{{ task.id }}" tabindex="-1" role="dialog">
+                                            <div class="modal-dialog" role="document">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">Task Details</h5>
+                                                        <button type="button" class="close" data-dismiss="modal">
+                                                            <span>&times;</span>
+                                                        </button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p><strong>User:</strong> {{ task.user.username }}</p>
+                                                        <p><strong>Date:</strong> {{ task.date.strftime('%B %d, %Y') }}</p>
+                                                        <p><strong>Description:</strong> {{ task.description }}</p>
+                                                        <p><strong>Hours:</strong> {{ task.hours }}</p>
+                                                        <p><strong>Progress:</strong> 
+                                                            <div class="progress">
+                                                                <div class="progress-bar" role="progressbar" 
+                                                                     style="width: {{ task.progress }}%">
+                                                                    {{ task.progress }}%
+                                                                </div>
+                                                            </div>
+                                                        </p>
+                                                        <p><strong>Status:</strong> 
+                                                            <span class="badge badge-{{ 'success' if task.status == 'Completed' else 'warning' }}">
+                                                              {{ task.status }}
+                                                            </span>
+                                                        </p>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                                        <a href="{{ url_for('edit_task', task_id=task.id) }}" class="btn btn-primary">
+                                                            <i class="fas fa-edit"></i> Edit
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ "%.1f"|format(task.hours) }}</td>
+                                    <td>
+                                        <div class="progress progress-sm">
+                                            <div class="progress-bar bg-{{ 'success' if task.status == 'Completed' else 'info' }}" 
+                                                 role="progressbar" style="width: {{ task.progress }}%">
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-{{ 'success' if task.status == 'Completed' else 'warning' }}">
+                                            {{ task.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-info" data-toggle="modal" data-target="#taskModal{{ task.id }}">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('edit_task', task_id=task.id) }}" class="btn btn-sm btn-warning">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Users</h6>
+                    <a href="{{ url_for('admin_users') }}" class="btn btn-sm btn-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Tasks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users[:5] %}
+                                <tr>
+                                    <td>{{ user.username }}</td>
+                                    <td>{{ user.email }}</td>
+                                    <td>{{ user.tasks|length }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Task Status Pie Chart
+    var ctx = document.getElementById("taskStatusChart");
+    var taskStatusChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ["Completed", "In Progress", "Pending"],
+            datasets: [{
+                data: [{{ completed_tasks }}, 
+                       {{ total_tasks - completed_tasks }}, 
+                       0], // You'll need to add pending tasks count to your view
+                backgroundColor: ['#1cc88a', '#f6c23e', '#e74a3b'],
+                hoverBackgroundColor: ['#17a673', '#dda20a', '#be2617'],
+                hoverBorderColor: "rgba(234, 236, 244, 1)",
+            }],
+        },
+        options: {
+            maintainAspectRatio: false,
+            tooltips: {
+                backgroundColor: "rgb(255,255,255)",
+                bodyFontColor: "#858796",
+                borderColor: '#dddfeb',
+                borderWidth: 1,
+                xPadding: 15,
+                yPadding: 15,
+                displayColors: false,
+                caretPadding: 10,
+            },
+            legend: {
+                display: false
+            },
+            cutoutPercentage: 80,
+        },
+    });
+
+    // Weekly Activity Area Chart
+    var ctx2 = document.getElementById("weeklyActivityChart");
+    var weeklyActivityChart = new Chart(ctx2, {
+        type: 'line',
+        data: {
+            labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+            datasets: [{
+                label: "Tasks Completed",
+                lineTension: 0.3,
+                backgroundColor: "rgba(78, 115, 223, 0.05)",
+                borderColor: "rgba(78, 115, 223, 1)",
+                pointRadius: 3,
+                pointBackgroundColor: "rgba(78, 115, 223, 1)",
+                pointBorderColor: "rgba(78, 115, 223, 1)",
+                pointHoverRadius: 3,
+                pointHoverBackgroundColor: "rgba(78, 115, 223, 1)",
+                pointHoverBorderColor: "rgba(78, 115, 223, 1)",
+                pointHitRadius: 10,
+                pointBorderWidth: 2,
+                data: [0, 5, 8, 12, 9, 3, 1], // You'll need to add weekly data to your view
+            }],
+        },
+        options: {
+            maintainAspectRatio: false,
+            layout: {
+                padding: {
+                    left: 10,
+                    right: 25,
+                    top: 25,
+                    bottom: 0
+                }
+            },
+            scales: {
+                xAxes: [{
+                    gridLines: {
+                        display: false,
+                        drawBorder: false
+                    },
+                    ticks: {
+                        maxTicksLimit: 7
+                    }
+                }],
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true,
+                        maxTicksLimit: 5,
+                        padding: 10,
+                    },
+                    gridLines: {
+                        color: "rgb(234, 236, 244)",
+                        zeroLineColor: "rgb(234, 236, 244)",
+                        drawBorder: false,
+                        borderDash: [2],
+                        zeroLineBorderDash: [2]
+                    }
+                }],
+            },
+            legend: {
+                display: false
+            },
+            tooltips: {
+                backgroundColor: "rgb(255,255,255)",
+                bodyFontColor: "#858796",
+                titleMarginBottom: 10,
+                titleFontColor: '#6e707e',
+                titleFontSize: 14,
+                borderColor: '#dddfeb',
+                borderWidth: 1,
+                xPadding: 15,
+                yPadding: 15,
+                displayColors: false,
+                intersect: false,
+                mode: 'index',
+                caretPadding: 10,
+            }
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize tooltips
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+        }
+        
+        // Animate progress bars
+        const progressBars = document.querySelectorAll('.progress-bar');
+        progressBars.forEach(bar => {
+            const width = bar.style.width || bar.getAttribute('aria-valuenow');
+            if (width) {
+                bar.style.width = '0';
+                setTimeout(() => {
+                    bar.style.width = width.includes('%') ? width : width + '%';
+                }, 50);
+            }
+        });
+    });
+</script>
+{% endblock %}
