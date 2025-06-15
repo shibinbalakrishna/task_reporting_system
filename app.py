@@ -6,10 +6,13 @@ import os
 from functools import wraps  # Added for decorator fixes
 import csv
 from io import StringIO
+import psycopg2  # Required for PostgreSQL on Render
+from dotenv import load_dotenv  # For local environment variables
+import gunicorn  # For production WSGI server (required in requirements.txt)
 
 app = Flask(__name__,template_folder='templates')
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///app.db').replace('postgres://', 'postgresql://')
+app.config['SECRET_KEY'] = 'your-secret-key-here'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -392,5 +395,11 @@ def logout():
     flash('You have been logged out.', 'info')
     return redirect(url_for('login'))
 
+# At the bottom of your file, modify the __main__ block:
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Only for development
+    if os.environ.get('RENDER') is None:
+        app.run(debug=True)
+    else:
+        # For production on Render
+        app.run(host='0.0.0.0', port=10000, debug=False)
